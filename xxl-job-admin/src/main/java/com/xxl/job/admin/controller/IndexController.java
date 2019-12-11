@@ -1,7 +1,5 @@
 package com.xxl.job.admin.controller;
 
-import com.xxl.job.admin.controller.annotation.PermissionLimit;
-import com.xxl.job.admin.service.LoginService;
 import com.xxl.job.admin.service.XxlJobService;
 import com.xxl.job.core.biz.model.ReturnT;
 import org.springframework.beans.propertyeditors.CustomDateEditor;
@@ -10,7 +8,6 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.annotation.Resource;
@@ -29,8 +26,6 @@ public class IndexController {
 
 	@Resource
 	private XxlJobService xxlJobService;
-	@Resource
-	private LoginService loginService;
 
 
 	@RequestMapping("/")
@@ -50,29 +45,12 @@ public class IndexController {
     }
 	
 	@RequestMapping("/toLogin")
-	@PermissionLimit(limit=false)
 	public String toLogin(HttpServletRequest request, HttpServletResponse response) {
-		if (loginService.ifLogin(request, response) != null) {
-			return "redirect:/";
-		}
+
 		return "login";
 	}
-	
-	@RequestMapping(value="login", method=RequestMethod.POST)
-	@ResponseBody
-	@PermissionLimit(limit=false)
-	public ReturnT<String> loginDo(HttpServletRequest request, HttpServletResponse response, String userName, String password, String ifRemember){
-		boolean ifRem = (ifRemember!=null && ifRemember.trim().length()>0 && "on".equals(ifRemember))?true:false;
-		return loginService.login(request, response, userName, password, ifRem);
-	}
-	
-	@RequestMapping(value="logout", method=RequestMethod.POST)
-	@ResponseBody
-	@PermissionLimit(limit=false)
-	public ReturnT<String> logout(HttpServletRequest request, HttpServletResponse response){
-		return loginService.logout(request, response);
-	}
-	
+
+
 	@RequestMapping("/help")
 	public String help() {
 

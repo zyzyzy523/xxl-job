@@ -1,5 +1,6 @@
 package com.xxl.job.admin.dao;
 
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.xxl.job.admin.core.model.XxlJobGroup;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -9,18 +10,18 @@ import java.util.List;
 /**
  * Created by xuxueli on 16/9/30.
  */
-@Mapper
-public interface XxlJobGroupDao {
 
-    public List<XxlJobGroup> findAll();
+public interface XxlJobGroupDao extends BaseMapper<XxlJobGroup> {
 
-    public List<XxlJobGroup> findByAddressType(@Param("addressType") int addressType);
+    List<XxlJobGroup> findAll();
 
-    public int save(XxlJobGroup xxlJobGroup);
+    List<XxlJobGroup> findByAddressType(@Param("addressType") int addressType);
 
-    public int update(XxlJobGroup xxlJobGroup);
+    int save(XxlJobGroup xxlJobGroup);
 
-    public int remove(@Param("id") int id);
+    int update(XxlJobGroup xxlJobGroup);
 
-    public XxlJobGroup load(@Param("id") int id);
+    int remove(@Param("id") int id);
+
+    XxlJobGroup load(@Param("id") int id);
 }

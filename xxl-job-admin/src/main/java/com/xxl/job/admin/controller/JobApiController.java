@@ -1,6 +1,5 @@
 package com.xxl.job.admin.controller;
 
-import com.xxl.job.admin.controller.annotation.PermissionLimit;
 import com.xxl.job.admin.core.conf.XxlJobAdminConfig;
 import com.xxl.job.admin.core.util.JacksonUtil;
 import com.xxl.job.core.biz.AdminBiz;
@@ -38,7 +37,6 @@ public class JobApiController {
      */
     @RequestMapping("/callback")
     @ResponseBody
-    @PermissionLimit(limit=false)
     public ReturnT<String> callback(HttpServletRequest request, @RequestBody(required = false) String data) {
         // valid
         if (XxlJobAdminConfig.getAdminConfig().getAccessToken()!=null
@@ -70,7 +68,6 @@ public class JobApiController {
      */
     @RequestMapping("/registry")
     @ResponseBody
-    @PermissionLimit(limit=false)
     public ReturnT<String> registry(HttpServletRequest request, @RequestBody(required = false) String data) {
         // valid
         if (XxlJobAdminConfig.getAdminConfig().getAccessToken()!=null
@@ -100,7 +97,6 @@ public class JobApiController {
      */
     @RequestMapping("/registryRemove")
     @ResponseBody
-    @PermissionLimit(limit=false)
     public ReturnT<String> registryRemove(HttpServletRequest request, @RequestBody(required = false) String data) {
         // valid
         if (XxlJobAdminConfig.getAdminConfig().getAccessToken()!=null

@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd">
+    <property name="now" value="now()" dbms="mysql,h2"/>
+    <property name="now" value="sysdate" dbms="oracle"/>
+
+    <changeSet id="1" author="admin">
+        <createTable tableName="xxl_job_info" remarks="任务表">
+            <column name="id" type="bigint" remarks="主键id" autoIncrement="true">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_xxl_job_info"/>
+            </column>
+            <column name="job_group" type="int" remarks="执行器主键ID" />
+            <column name="job_cron" type="varchar(128)" remarks="任务执行CRON" />
+            <column name="tenant_id" type="bigint" remarks="租户id" />
+            <column name="job_desc" type="varchar(255)" remarks="" />
+            <column name="add_time" type="datetime" remarks="" />
+            <column name="update_time" type="datetime" remarks="" />
+            <column name="author" type="varchar(50)" remarks="作者" />
+            <column name="alarm_email" type="varchar(1024)" remarks="报警邮件" />
+            <column name="executor_route_strategy" type="varchar(50)" remarks="执行器路由策略" />
+            <column name="executor_handler" type="varchar(255)" remarks="执行器任务handler" />
+            <column name="executor_param" type="varchar(512)" remarks="执行器任务参数" />
+            <column name="executor_block_strategy" type="varchar(50)" remarks="阻塞处理策略" />
+            <column name="executor_timeout" type="int" remarks="任务执行超时时间，单位秒" />
+            <column name="executor_fail_retry_count" type="int" remarks="失败重试次数"  defaultValue="0"/>
+            <column name="glue_type" type="varchar(50)" remarks="GLUE类型" />
+            <column name="glue_source" type="longtext" remarks="GLUE源代码" />
+            <column name="glue_remark" type="varchar(128)" remarks="GLUE备注" />
+            <column name="glue_updatetime" type="datetime" remarks="GLUE更新时间" />
+            <column name="child_jobid" type="varchar(512)" remarks="子任务ID，多个逗号分隔" />
+            <column name="trigger_status" type="tinyint" remarks="调度状态：0-停止，1-运行" />
+            <column name="trigger_last_time" type="bigint" remarks="上次调度时间" />
+            <column name="trigger_next_time" type="bigint" remarks="下次调度时间" />
+        </createTable>
+    </changeSet>
+
+    <changeSet id="2" author="admin">
+        <createTable tableName="xxl_job_log" remarks="日志表">
+            <column name="id" type="bigint" remarks="主键id" autoIncrement="true">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_xxl_job_log"/>
+            </column>
+            <column name="tenant_id" type="bigint" remarks="租户id" />
+            <column name="job_group" type="bigint" remarks="执行器主键ID"/>
+            <column name="job_id" type="bigint" remarks="任务，主键ID"/>
+            <column name="executor_address" type="varchar(255)" remarks="执行器地址，本次执行的地址"/>
+            <column name="executor_handler" type="varchar(255)" remarks="执行器任务handler"/>
+            <column name="executor_param" type="varchar(512)" remarks="执行器任务参数"/>
+            <column name="executor_sharding_param" type="varchar(20)" remarks="执行器任务分片参数，格式如 1/2"/>
+            <column name="executor_fail_retry_count" type="int" remarks="失败重试次数" defaultValue="0"/>
+            <column name="trigger_time" type="datetime" remarks="调度-时间" />
+            <column name="trigger_code" type="int" remarks="调度-结果" />
+            <column name="trigger_msg" type="longtext" remarks="调度-日志" />
+            <column name="handle_time" type="datetime" remarks="执行-时间" />
+            <column name="handle_code" type="int" remarks="执行-状态" />
+            <column name="handle_msg" type="longtext" remarks="执行-日志" />
+            <column name="alarm_status" type="tinyint" remarks="告警状态：0-默认、1-无需告警、2-告警成功、3-告警失败" />
+        </createTable>
+        <createIndex tableName="xxl_job_log" indexName="l_trigger_time">
+            <column name="trigger_time"/>
+        </createIndex>
+        <createIndex tableName="xxl_job_log" indexName="l_handle_code">
+            <column name="handle_code"/>
+        </createIndex>
+    </changeSet>
+    
+    <changeSet id="3" author="admin">
+        <createTable tableName="xxl_job_logglue">
+            <column name="id" type="bigint" remarks="主键id" autoIncrement="true">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_xxl_job_logglue"/>
+            </column>
+            <column name="job_id" type="bigint" remarks="任务，主键ID"/>
+            <column name="glue_type" type="varchar(50)" remarks="GLUE类型"/>
+            <column name="glue_source" type="longtext" remarks="GLUE源代码"/>
+            <column name="glue_remark" type="varchar(128)" remarks="GLUE备注"/>
+            <column name="add_time" type="timestamp" remarks="添加时间"/>
+            <column name="update_time" type="timestamp" remarks="添加时间" defaultValue="${now}"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="4" author="admin">
+        <createTable tableName="xxl_job_registry">
+            <column name="id" type="bigint" remarks="主键id" autoIncrement="true">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_xxl_job_registry"/>
+            </column>
+            <column name="registry_group" type="varchar(255)" />
+            <column name="registry_key" type="varchar(255)" />
+            <column name="registry_value" type="varchar(255)" />
+            <column name="update_time" type="timestamp" remarks="添加时间" defaultValue="${now}"/>
+        </createTable>
+        <createIndex tableName="xxl_job_registry" indexName="i_g_k_v">
+            <column name="registry_group"/>
+            <column name="registry_key"/>
+            <column name="registry_value"/>
+        </createIndex>
+        <createIndex tableName="xxl_job_registry" indexName="i_u">
+            <column name="update_time"/>
+        </createIndex>
+    </changeSet>
+
+    <changeSet id="5" author="admin">
+        <createTable tableName="xxl_job_group">
+            <column name="id" type="bigint" remarks="主键id" autoIncrement="true">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_xxl_job_group"/>
+            </column>
+            <column name="app_name" type="varchar(255)" remarks="执行器AppName"/>
+            <column name="title" type="varchar(255)" remarks="执行器名称"/>
+            <column name="ordering" type="tinyint" remarks="排序" />
+            <column name="address_type" type="tinyint" remarks="执行器地址类型：0=自动注册、1=手动录入" />
+            <column name="address_list" type="varchar(512)" remarks="执行器地址列表，多地址逗号分隔"/>
+        </createTable>
+        <sql>
+            INSERT INTO xxl_job_group(id, app_name, title, ordering, address_type, address_list) VALUES (0, 'xxl-job-executor-sample', '示例执行器', 1, 0, NULL);
+        </sql>
+    </changeSet>
+
+    <changeSet id="6" author="admin">
+        <createTable tableName="xxl_job_lock">
+            <column name="lock_name" type="varchar(255)" remarks="锁名称">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_xxl_job_lock"/>
+            </column>
+        </createTable>
+        <sql>
+            INSERT INTO xxl_job_lock(lock_name) VALUES ('schedule_lock');
+        </sql>
+    </changeSet>
+
+
+    <changeSet id="7" author="admin" dbms="oracle">
+        <createSequence sequenceName="xxl_job_group_s" />
+        <createSequence sequenceName="xxl_job_info_s" />
+        <createSequence sequenceName="xxl_job_log_s" />
+        <createSequence sequenceName="xxl_job_logglue_s" />
+        <createSequence sequenceName="xxl_job_registry_s" />
+    </changeSet>
+
+
+    <changeSet id="20191211001" author="admin">
+        <createTable tableName="xxl_job_log_report">
+            <column name="id" type="bigint" remarks="主键id" autoIncrement="true">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_xxl_job_log_report"/>
+            </column>
+            <column name="job_id" type="bigint" remarks="任务，主键ID"/>
+            <column name="trigger_day" type="timestamp"/>
+            <column name="running_count" type="int"/>
+            <column name="suc_count" type="int"/>
+            <column name="fail_count" type="int"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="20191211002" author="admin" dbms="oracle">
+        <createSequence sequenceName="xxl_job_log_report_s" />
+    </changeSet>
+</databaseChangeLog>

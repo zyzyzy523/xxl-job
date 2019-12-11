@@ -1,0 +1,6 @@
+eureka:
+  client:
+    enabled: false
+mybatis-plus:
+  mapper-locations: classpath:/mybatis-mapper/*Mapper.xml
+  type-aliases-package: com.xxl.job.admin.core.model

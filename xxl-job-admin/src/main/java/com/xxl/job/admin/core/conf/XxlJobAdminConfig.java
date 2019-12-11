@@ -47,22 +47,22 @@ public class XxlJobAdminConfig implements InitializingBean, DisposableBean {
     // ---------------------- XxlJobScheduler ----------------------
 
     // conf
-    @Value("${xxl.job.i18n}")
+    @Value("${xxl.job.i18n:}")
     private String i18n;
 
-    @Value("${xxl.job.accessToken}")
+    @Value("${xxl.job.accessToken:}")
     private String accessToken;
 
-    @Value("${spring.mail.username}")
+    @Value("${spring.mail.username:}")
     private String emailUserName;
 
-    @Value("${xxl.job.triggerpool.fast.max}")
+    @Value("${xxl.job.triggerpool.fast.max:200}")
     private int triggerPoolFastMax;
 
-    @Value("${xxl.job.triggerpool.slow.max}")
+    @Value("${xxl.job.triggerpool.slow.max:100}")
     private int triggerPoolSlowMax;
 
-    @Value("${xxl.job.logretentiondays}")
+    @Value("${xxl.job.logretentiondays:30}")
     private int logretentiondays;
 
     // dao, service

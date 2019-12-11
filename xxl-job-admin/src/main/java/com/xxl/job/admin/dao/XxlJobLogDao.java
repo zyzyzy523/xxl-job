@@ -1,5 +1,8 @@
 package com.xxl.job.admin.dao;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.xxl.job.admin.core.model.XxlJobLog;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -12,49 +15,37 @@ import java.util.Map;
  * job log
  * @author xuxueli 2016-1-12 18:03:06
  */
-@Mapper
-public interface XxlJobLogDao {
 
-	// exist jobId not use jobGroup, not exist use jobGroup
-	public List<XxlJobLog> pageList(@Param("offset") int offset,
-									@Param("pagesize") int pagesize,
-									@Param("jobGroup") int jobGroup,
-									@Param("jobId") int jobId,
-									@Param("triggerTimeStart") Date triggerTimeStart,
-									@Param("triggerTimeEnd") Date triggerTimeEnd,
-									@Param("logStatus") int logStatus);
-	public int pageListCount(@Param("offset") int offset,
-							 @Param("pagesize") int pagesize,
+public interface XxlJobLogDao extends BaseMapper<XxlJobLog> {
+	
+	List<XxlJobLog> pageList(IPage page,
 							 @Param("jobGroup") int jobGroup,
 							 @Param("jobId") int jobId,
 							 @Param("triggerTimeStart") Date triggerTimeStart,
 							 @Param("triggerTimeEnd") Date triggerTimeEnd,
-							 @Param("logStatus") int logStatus);
+							 @Param("logStatus") int logStatus,
+							 @Param("tenantId") Long tenantId);
+
+	XxlJobLog load(@Param("id") long id);
+
+
+
+	int updateTriggerInfo(XxlJobLog xxlJobLog);
+
+	int updateHandleInfo(XxlJobLog xxlJobLog);
 	
-	public XxlJobLog load(@Param("id") long id);
+	int deleteByJobId(@Param("jobId") int jobId);
 
-	public long save(XxlJobLog xxlJobLog);
+	Map<String, Object> findLogReport(@Param("from") Date from,
+										 @Param("to") Date to);
 
-	public int updateTriggerInfo(XxlJobLog xxlJobLog);
 
-	public int updateHandleInfo(XxlJobLog xxlJobLog);
-	
-	public int delete(@Param("jobId") int jobId);
 
-	public Map<String, Object> findLogReport(@Param("from") Date from,
-											 @Param("to") Date to);
 
-	public List<Long> findClearLogIds(@Param("jobGroup") int jobGroup,
-									  @Param("jobId") int jobId,
-									  @Param("clearBeforeTime") Date clearBeforeTime,
-									  @Param("clearBeforeNum") int clearBeforeNum,
-									  @Param("pagesize") int pagesize);
-	public int clearLog(@Param("logIds") List<Long> logIds);
+	List<Long> findFailJobLogIds(@Param("pagesize") int pagesize);
 
-	public List<Long> findFailJobLogIds(@Param("pagesize") int pagesize);
-
-	public int updateAlarmStatus(@Param("logId") long logId,
+	int updateAlarmStatus(@Param("logId") long logId,
 								 @Param("oldAlarmStatus") int oldAlarmStatus,
 								 @Param("newAlarmStatus") int newAlarmStatus);
-
+	List<Integer> selectListId(IPage rowBounds, @Param("ew") QueryWrapper<XxlJobLog> wrapper);
 }

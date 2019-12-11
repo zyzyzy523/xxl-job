@@ -1,19 +1,27 @@
 package com.xxl.job.admin.core.model;
 
+
+import com.baomidou.mybatisplus.annotation.KeySequence;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+
+import java.io.Serializable;
 import java.util.Date;
 
 /**
  * xxl-job log, used to track trigger process
  * @author xuxueli  2015-12-19 23:19:09
  */
-public class XxlJobLog {
-	
+@KeySequence("xxl_job_log_s")
+@TableName("xxl_job_log")
+public class XxlJobLog implements Serializable {
+	@TableId
 	private long id;
 	
 	// job info
 	private int jobGroup;
 	private int jobId;
-
+	private Long tenantId;
 	// execute info
 	private String executorAddress;
 	private String executorHandler;
@@ -40,6 +48,14 @@ public class XxlJobLog {
 
 	public void setId(long id) {
 		this.id = id;
+	}
+
+	public Long getTenantId() {
+		return tenantId;
+	}
+
+	public void setTenantId(Long tenantId) {
+		this.tenantId = tenantId;
 	}
 
 	public int getJobGroup() {
