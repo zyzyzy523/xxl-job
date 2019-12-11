@@ -159,9 +159,8 @@ public class JobInfoController {
 		return ReturnT.SUCCESS;
 	}
 
-	@RequestMapping("/nextTriggerTime")
-	@ResponseBody
-	public ReturnT<List<String>> nextTriggerTime(String cron) {
+	@GetMapping("/nextTriggerTime")
+	public ReturnT<List<String>> nextTriggerTime(@RequestParam String cron) {
 		List<String> result = new ArrayList<>();
 		try {
 			CronExpression cronExpression = new CronExpression(cron);
