@@ -145,10 +145,16 @@ public class JobInfoController {
 	
 	@PostMapping("/trigger/{id}")
 	public ReturnT<String> triggerJob(@PathVariable("id") int id,@RequestParam(required = false) String executorParam){
-		if (executorParam == null) {
-			executorParam = "";
+		XxlJobInfo xxlJobInfo = xxlJobInfoDao.selectById(id);
+		if (null == xxlJobInfo) {
+			throw new RuntimeException("任务不存在");
 		}
-
+		// 任务参数没有传值就自动拼接租户id
+		if (!StringUtils.hasText(executorParam)) {
+			executorParam = xxlJobInfo.getTenantId().toString();
+		} else {
+			executorParam = xxlJobInfo.getTenantId().toString() + "," + executorParam;
+		}
 		JobTriggerPoolHelper.trigger(id, TriggerTypeEnum.MANUAL, -1, null, executorParam);
 		return ReturnT.SUCCESS;
 	}

@@ -20,7 +20,6 @@ import java.util.List;
  * Created by xuxueli on 17/5/10.
  */
 @Controller
-@RequestMapping("/api")
 public class JobApiController {
 
     @Resource
