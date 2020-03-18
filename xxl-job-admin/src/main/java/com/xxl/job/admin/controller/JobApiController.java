@@ -32,13 +32,13 @@ public class JobApiController {
     /**
      * valid access token
      */
-    private void validAccessToken(HttpServletRequest request){
+    /*private void validAccessToken(HttpServletRequest request){
         if (XxlJobAdminConfig.getAdminConfig().getAccessToken()!=null
                 && XxlJobAdminConfig.getAdminConfig().getAccessToken().trim().length()>0
                 && !XxlJobAdminConfig.getAdminConfig().getAccessToken().equals(request.getHeader(XxlJobRemotingUtil.XXL_RPC_ACCESS_TOKEN))) {
             throw new XxlJobException("The access token is wrong.");
         }
-    }
+    }*/
 
     /**
      * parse Param
@@ -70,7 +70,7 @@ public class JobApiController {
     @ResponseBody
     public ReturnT<String> callback(HttpServletRequest request, @RequestBody(required = false) String data) {
         // valid
-        validAccessToken(request);
+        // validAccessToken(request);
 
         // param
         List<HandleCallbackParam> callbackParamList = (List<HandleCallbackParam>) parseParam(data, List.class, HandleCallbackParam.class);
@@ -91,7 +91,7 @@ public class JobApiController {
     @ResponseBody
     public ReturnT<String> registry(HttpServletRequest request, @RequestBody(required = false) String data) {
         // valid
-        validAccessToken(request);
+        // validAccessToken(request);
 
         // param
         RegistryParam registryParam = (RegistryParam) parseParam(data, RegistryParam.class);
@@ -110,7 +110,7 @@ public class JobApiController {
     @ResponseBody
     public ReturnT<String> registryRemove(HttpServletRequest request, @RequestBody(required = false) String data) {
         // valid
-        validAccessToken(request);
+        // validAccessToken(request);
 
         // param
         RegistryParam registryParam = (RegistryParam) parseParam(data, RegistryParam.class);

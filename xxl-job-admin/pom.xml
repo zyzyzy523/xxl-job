@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>com.hand.hcf.cloud</groupId>
 		<artifactId>hcf-cloud-parent</artifactId>
-		<version>2.0.0.RELEASE</version>
+		<version>2.5.0-SNAPSHOT</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<artifactId>job-admin</artifactId>
@@ -151,16 +151,15 @@
 	</build>
 	<repositories>
 		<repository>
-			<id>rdc-snapshots</id>
-			<url>https://repo.rdc.aliyun.com/repository/103499-snapshot-Mk5ks1/</url>
-		</repository>
-		<repository>
-			<id>rdc-releases</id>
-			<url>https://repo.rdc.aliyun.com/repository/103499-release-yChX4Y/</url>
-		</repository>
-		<repository>
-			<id>spring</id>
-			<url>http://repo.spring.io/plugins-release/</url>
+			<id>polars-ecf-maven</id>
+			<name>maven</name>
+			<url>https://polars-maven.pkg.coding.net/repository/ecf/maven/</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
 		</repository>
 	</repositories>
 </project>
