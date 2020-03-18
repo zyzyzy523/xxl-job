@@ -1,6 +1,7 @@
 package com.xxl.job.admin.controller;
 
 import com.xxl.job.admin.core.conf.XxlJobAdminConfig;
+import com.xxl.job.admin.core.exception.XxlJobException;
 import com.xxl.job.admin.core.util.JacksonUtil;
 import com.xxl.job.core.biz.AdminBiz;
 import com.xxl.job.core.biz.model.HandleCallbackParam;
@@ -26,6 +27,37 @@ public class JobApiController {
     private AdminBiz adminBiz;
 
 
+    // ---------------------- base ----------------------
+
+    /**
+     * valid access token
+     */
+    private void validAccessToken(HttpServletRequest request){
+        if (XxlJobAdminConfig.getAdminConfig().getAccessToken()!=null
+                && XxlJobAdminConfig.getAdminConfig().getAccessToken().trim().length()>0
+                && !XxlJobAdminConfig.getAdminConfig().getAccessToken().equals(request.getHeader(XxlJobRemotingUtil.XXL_RPC_ACCESS_TOKEN))) {
+            throw new XxlJobException("The access token is wrong.");
+        }
+    }
+
+    /**
+     * parse Param
+     */
+    private Object parseParam(String data, Class<?> parametrized, Class<?>... parameterClasses){
+        Object param = null;
+        try {
+            if (parameterClasses != null) {
+                param = JacksonUtil.readValue(data, parametrized, parameterClasses);
+            } else {
+                param = JacksonUtil.readValue(data, parametrized);
+            }
+        } catch (Exception e) { }
+        if (param==null) {
+            throw new XxlJobException("The request data invalid.");
+        }
+        return param;
+    }
+
     // ---------------------- admin biz ----------------------
 
     /**
@@ -38,20 +70,10 @@ public class JobApiController {
     @ResponseBody
     public ReturnT<String> callback(HttpServletRequest request, @RequestBody(required = false) String data) {
         // valid
-        if (XxlJobAdminConfig.getAdminConfig().getAccessToken()!=null
-                && XxlJobAdminConfig.getAdminConfig().getAccessToken().trim().length()>0
-                && !XxlJobAdminConfig.getAdminConfig().getAccessToken().equals(request.getHeader(XxlJobRemotingUtil.XXL_RPC_ACCESS_TOKEN))) {
-            return new ReturnT<String>(ReturnT.FAIL_CODE, "The access token is wrong.");
-        }
+        validAccessToken(request);
 
         // param
-        List<HandleCallbackParam> callbackParamList = null;
-        try {
-            callbackParamList = JacksonUtil.readValue(data, List.class, HandleCallbackParam.class);
-        } catch (Exception e) { }
-        if (callbackParamList==null || callbackParamList.size()==0) {
-            return new ReturnT<String>(ReturnT.FAIL_CODE, "The request data invalid.");
-        }
+        List<HandleCallbackParam> callbackParamList = (List<HandleCallbackParam>) parseParam(data, List.class, HandleCallbackParam.class);
 
         // invoke
         return adminBiz.callback(callbackParamList);
@@ -69,20 +91,10 @@ public class JobApiController {
     @ResponseBody
     public ReturnT<String> registry(HttpServletRequest request, @RequestBody(required = false) String data) {
         // valid
-        if (XxlJobAdminConfig.getAdminConfig().getAccessToken()!=null
-                && XxlJobAdminConfig.getAdminConfig().getAccessToken().trim().length()>0
-                && !XxlJobAdminConfig.getAdminConfig().getAccessToken().equals(request.getHeader(XxlJobRemotingUtil.XXL_RPC_ACCESS_TOKEN))) {
-            return new ReturnT<String>(ReturnT.FAIL_CODE, "The access token is wrong.");
-        }
+        validAccessToken(request);
 
         // param
-        RegistryParam registryParam = null;
-        try {
-            registryParam = JacksonUtil.readValue(data, RegistryParam.class);
-        } catch (Exception e) {}
-        if (registryParam == null) {
-            return new ReturnT<String>(ReturnT.FAIL_CODE, "The request data invalid.");
-        }
+        RegistryParam registryParam = (RegistryParam) parseParam(data, RegistryParam.class);
 
         // invoke
         return adminBiz.registry(registryParam);
@@ -98,20 +110,10 @@ public class JobApiController {
     @ResponseBody
     public ReturnT<String> registryRemove(HttpServletRequest request, @RequestBody(required = false) String data) {
         // valid
-        if (XxlJobAdminConfig.getAdminConfig().getAccessToken()!=null
-                && XxlJobAdminConfig.getAdminConfig().getAccessToken().trim().length()>0
-                && !XxlJobAdminConfig.getAdminConfig().getAccessToken().equals(request.getHeader(XxlJobRemotingUtil.XXL_RPC_ACCESS_TOKEN))) {
-            return new ReturnT<String>(ReturnT.FAIL_CODE, "The access token is wrong.");
-        }
+        validAccessToken(request);
 
         // param
-        RegistryParam registryParam = null;
-        try {
-            registryParam = JacksonUtil.readValue(data, RegistryParam.class);
-        } catch (Exception e) {}
-        if (registryParam == null) {
-            return new ReturnT<String>(ReturnT.FAIL_CODE, "The request data invalid.");
-        }
+        RegistryParam registryParam = (RegistryParam) parseParam(data, RegistryParam.class);
 
         // invoke
         return adminBiz.registryRemove(registryParam);
