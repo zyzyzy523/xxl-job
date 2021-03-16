@@ -1,5 +1,10 @@
 package com.xxl.job.admin.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.xxl.job.admin.core.scheduler.XxlJobScheduler;
 import com.xxl.job.admin.core.exception.XxlJobException;
 import com.xxl.job.admin.core.complete.XxlJobCompleter;
 import com.xxl.job.admin.core.model.XxlJobGroup;
@@ -7,6 +12,7 @@ import com.xxl.job.admin.core.model.XxlJobInfo;
 import com.xxl.job.admin.core.model.XxlJobLog;
 import com.xxl.job.admin.core.scheduler.XxlJobScheduler;
 import com.xxl.job.admin.core.util.I18nUtil;
+import com.xxl.job.admin.core.util.LoginInformationUtil;
 import com.xxl.job.admin.dao.XxlJobGroupDao;
 import com.xxl.job.admin.dao.XxlJobInfoDao;
 import com.xxl.job.admin.dao.XxlJobLogDao;
@@ -18,14 +24,23 @@ import com.xxl.job.core.biz.model.ReturnT;
 import com.xxl.job.core.util.DateUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -35,8 +50,8 @@ import java.util.Map;
  * index controller
  * @author xuxueli 2015-12-19 16:13:16
  */
-@Controller
-@RequestMapping("/joblog")
+@RestController
+@RequestMapping("/api/joblog")
 public class JobLogController {
 	private static Logger logger = LoggerFactory.getLogger(JobLogController.class);
 
@@ -49,7 +64,6 @@ public class JobLogController {
 
 	@RequestMapping
 	public String index(HttpServletRequest request, Model model, @RequestParam(required = false, defaultValue = "0") Integer jobId) {
-
 		// 执行器列表
 		List<XxlJobGroup> jobGroupList_all =  xxlJobGroupDao.findAll();
 
@@ -71,54 +85,53 @@ public class JobLogController {
 			model.addAttribute("jobInfo", jobInfo);
 
 			// valid permission
-			JobInfoController.validPermission(request, jobInfo.getJobGroup());
+			//JobInfoController.validPermission(request, jobInfo.getJobGroup());
 		}
 
 		return "joblog/joblog.index";
 	}
 
-	@RequestMapping("/getJobsByGroup")
-	@ResponseBody
-	public ReturnT<List<XxlJobInfo>> getJobsByGroup(int jobGroup){
+	@GetMapping("/getJobsByGroup")
+	public ReturnT<List<XxlJobInfo>> getJobsByGroup(@RequestParam("jobGroup") int jobGroup){
 		List<XxlJobInfo> list = xxlJobInfoDao.getJobsByGroup(jobGroup);
 		return new ReturnT<List<XxlJobInfo>>(list);
 	}
 	
-	@RequestMapping("/pageList")
-	@ResponseBody
-	public Map<String, Object> pageList(HttpServletRequest request,
-										@RequestParam(required = false, defaultValue = "0") int start,
-										@RequestParam(required = false, defaultValue = "10") int length,
-										int jobGroup, int jobId, int logStatus, String filterTime) {
-
-		// valid permission
-		JobInfoController.validPermission(request, jobGroup);	// 仅管理员支持查询全部；普通用户仅支持查询有权限的 jobGroup
+	@GetMapping("/pageList")
+	public ResponseEntity pageList(@RequestParam(required = false, defaultValue = "0") int page,
+								   @RequestParam(required = false, defaultValue = "10") int size,
+								   @RequestParam(required = false, defaultValue = "-1") int jobGroup,
+								   @RequestParam(required = false, defaultValue = "-1") int jobId,
+								   @RequestParam(required = false, defaultValue = "-1") int logStatus,
+								   @RequestParam(required = false) String filterTime) {
 		
 		// parse param
 		Date triggerTimeStart = null;
 		Date triggerTimeEnd = null;
+		Page<XxlJobLog> p = new Page();
+		p.setSize(size);
+		p.setCurrent(page + 1);
 		if (filterTime!=null && filterTime.trim().length()>0) {
 			String[] temp = filterTime.split(" - ");
-			if (temp.length == 2) {
+			if (temp!=null && temp.length == 2) {
 				triggerTimeStart = DateUtil.parseDateTime(temp[0]);
 				triggerTimeEnd = DateUtil.parseDateTime(temp[1]);
 			}
 		}
 		
 		// page query
-		List<XxlJobLog> list = xxlJobLogDao.pageList(start, length, jobGroup, jobId, triggerTimeStart, triggerTimeEnd, logStatus);
-		int list_count = xxlJobLogDao.pageListCount(start, length, jobGroup, jobId, triggerTimeStart, triggerTimeEnd, logStatus);
-		
+		List<XxlJobLog> list = xxlJobLogDao.pageList(p ,jobGroup, jobId, triggerTimeStart, triggerTimeEnd, logStatus, LoginInformationUtil.getTenantId());
+
 		// package result
-		Map<String, Object> maps = new HashMap<String, Object>();
-	    maps.put("recordsTotal", list_count);		// 总记录数
-	    maps.put("recordsFiltered", list_count);	// 过滤后的总记录数
-	    maps.put("data", list);  					// 分页列表
-		return maps;
+		HttpHeaders headers = new HttpHeaders();
+		headers.add("x-total-count", ""+ p.getTotal());
+
+		return new ResponseEntity<>(list,headers, HttpStatus.OK);
+
 	}
 
 	@RequestMapping("/logDetailPage")
-	public String logDetailPage(int id, Model model){
+	public String logDetailPage(long id, Model model){
 
 		// base check
 		ReturnT<String> logStatue = ReturnT.SUCCESS;
@@ -136,8 +149,10 @@ public class JobLogController {
 	}
 
 	@RequestMapping("/logDetailCat")
-	@ResponseBody
-	public ReturnT<LogResult> logDetailCat(String executorAddress, long triggerTime, long logId, int fromLineNum){
+	public ReturnT<LogResult> logDetailCat(@RequestParam String executorAddress,
+										   @RequestParam long triggerTime,
+										   @RequestParam long logId,
+										   @RequestParam int fromLineNum){
 		try {
 			ExecutorBiz executorBiz = XxlJobScheduler.getExecutorBiz(executorAddress);
 			ReturnT<LogResult> logResult = executorBiz.log(new LogParam(triggerTime, logId, fromLineNum));
@@ -157,9 +172,8 @@ public class JobLogController {
 		}
 	}
 
-	@RequestMapping("/logKill")
-	@ResponseBody
-	public ReturnT<String> logKill(int id){
+	@PostMapping("/logKill/{id}")
+	public ReturnT<String> logKill(@PathVariable("id") long id){
 		// base check
 		XxlJobLog log = xxlJobLogDao.load(id);
 		XxlJobInfo jobInfo = xxlJobInfoDao.loadById(log.getJobId());
@@ -191,9 +205,10 @@ public class JobLogController {
 		}
 	}
 
-	@RequestMapping("/clearLog")
-	@ResponseBody
-	public ReturnT<String> clearLog(int jobGroup, int jobId, int type){
+	@DeleteMapping("/clearLog")
+	public ReturnT<String> clearLog(@RequestParam(required = false,defaultValue = "-1") int jobGroup,
+									@RequestParam(required = false,defaultValue = "-1")int jobId,
+									@RequestParam int type){
 
 		Date clearBeforeTime = null;
 		int clearBeforeNum = 0;
@@ -219,14 +234,24 @@ public class JobLogController {
 			return new ReturnT<String>(ReturnT.FAIL_CODE, I18nUtil.getString("joblog_clean_type_unvalid"));
 		}
 
-		List<Long> logIds = null;
-		do {
-			logIds = xxlJobLogDao.findClearLogIds(jobGroup, jobId, clearBeforeTime, clearBeforeNum, 1000);
-			if (logIds!=null && logIds.size()>0) {
-				xxlJobLogDao.clearLog(logIds);
-			}
-		} while (logIds!=null && logIds.size()>0);
+		//xxlJobLogDao.clearLog(jobGroup, jobId, clearBeforeTime, clearBeforeNum);
+		List<Integer> list = new ArrayList<>();
+		if (type > 4 && type < 9) {
+			Page page = new Page();
+			page.setCurrent(1);
+			page.setSize(clearBeforeNum);
+			page.setSearchCount(false);
+			list = xxlJobLogDao.selectListId(page,new QueryWrapper<XxlJobLog>()
+					.eq(jobGroup > 0, "job_group", jobGroup)
+					.eq(jobId > 0, "job_id", jobId)
+					.orderByDesc("trigger_time"));
 
+		}
+		xxlJobLogDao.delete(new QueryWrapper<XxlJobLog>()
+				.eq(jobGroup > 0,"job_group",jobGroup)
+				.eq(jobId > 0,"job_id",jobId)
+				.le(clearBeforeTime != null,"trigger_time",clearBeforeTime)
+				.notIn(clearBeforeNum > 0,"id", list));
 		return ReturnT.SUCCESS;
 	}
 

@@ -1,6 +1,8 @@
 package com.xxl.job.admin.service.impl;
 
 import com.xxl.job.admin.core.cron.CronExpression;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.xxl.job.admin.core.model.XxlJobGroup;
 import com.xxl.job.admin.core.model.XxlJobInfo;
 import com.xxl.job.admin.core.model.XxlJobLogReport;
@@ -9,7 +11,12 @@ import com.xxl.job.admin.core.scheduler.MisfireStrategyEnum;
 import com.xxl.job.admin.core.scheduler.ScheduleTypeEnum;
 import com.xxl.job.admin.core.thread.JobScheduleHelper;
 import com.xxl.job.admin.core.util.I18nUtil;
-import com.xxl.job.admin.dao.*;
+import com.xxl.job.admin.core.util.LoginInformationUtil;
+import com.xxl.job.admin.dao.XxlJobGroupDao;
+import com.xxl.job.admin.dao.XxlJobInfoDao;
+import com.xxl.job.admin.dao.XxlJobLogDao;
+import com.xxl.job.admin.dao.XxlJobLogGlueDao;
+import com.xxl.job.admin.dao.XxlJobLogReportDao;
 import com.xxl.job.admin.service.XxlJobService;
 import com.xxl.job.core.biz.model.ReturnT;
 import com.xxl.job.core.enums.ExecutorBlockStrategyEnum;
@@ -18,6 +25,7 @@ import com.xxl.job.core.util.DateUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
 import java.text.MessageFormat;
@@ -43,17 +51,27 @@ public class XxlJobServiceImpl implements XxlJobService {
 	private XxlJobLogReportDao xxlJobLogReportDao;
 	
 	@Override
-	public Map<String, Object> pageList(int start, int length, int jobGroup, int triggerStatus, String jobDesc, String executorHandler, String author) {
+	public Map<String, Object> pageList(int start,
+										int length,
+										int jobGroup, int triggerStatus, String jobDesc, String executorHandler, String author) {
 
 		// page list
-		List<XxlJobInfo> list = xxlJobInfoDao.pageList(start, length, jobGroup, triggerStatus, jobDesc, executorHandler, author);
-		int list_count = xxlJobInfoDao.pageListCount(start, length, jobGroup, triggerStatus, jobDesc, executorHandler, author);
-		
+		Page<XxlJobInfo> page = new Page<>();
+		page.setSize(length);
+		page.setCurrent(start + 1);
+		List<XxlJobInfo> list = xxlJobInfoDao.selectPage(page, new QueryWrapper<XxlJobInfo>()
+				.eq(jobGroup > 0,"job_group",jobGroup)
+				.eq(triggerStatus >= 0,"trigger_status",triggerStatus)
+				.eq("tenant_id", LoginInformationUtil.getTenantId())
+				.like(org.springframework.util.StringUtils.hasText(executorHandler),"executor_handler",executorHandler)
+				.like(org.springframework.util.StringUtils.hasText(jobDesc),"job_desc",jobDesc)
+				.like(org.springframework.util.StringUtils.hasText(author),"author",author)
+				.orderByDesc("id")).getRecords();
+
 		// package result
-		Map<String, Object> maps = new HashMap<String, Object>();
-	    maps.put("recordsTotal", list_count);		// 总记录数
-	    maps.put("recordsFiltered", list_count);	// 过滤后的总记录数
-	    maps.put("data", list);  					// 分页列表
+		Map<String, Object> maps = new HashMap<>(3);
+		maps.put("data", list);
+		maps.put("total",page.getTotal());
 		return maps;
 	}
 
@@ -148,7 +166,9 @@ public class XxlJobServiceImpl implements XxlJobService {
 		jobInfo.setAddTime(new Date());
 		jobInfo.setUpdateTime(new Date());
 		jobInfo.setGlueUpdatetime(new Date());
-		xxlJobInfoDao.save(jobInfo);
+		jobInfo.setTenantId(LoginInformationUtil.getTenantId());
+		initTenantId(jobInfo);
+		xxlJobInfoDao.insert(jobInfo);
 		if (jobInfo.getId() < 1) {
 			return new ReturnT<String>(ReturnT.FAIL_CODE, (I18nUtil.getString("jobinfo_field_add")+I18nUtil.getString("system_fail")) );
 		}
@@ -263,7 +283,7 @@ public class XxlJobServiceImpl implements XxlJobService {
 				return new ReturnT<String>(ReturnT.FAIL_CODE, (I18nUtil.getString("schedule_type")+I18nUtil.getString("system_unvalid")) );
 			}
 		}
-
+		initTenantId(jobInfo);
 		exists_jobInfo.setJobGroup(jobInfo.getJobGroup());
 		exists_jobInfo.setJobDesc(jobInfo.getJobDesc());
 		exists_jobInfo.setAuthor(jobInfo.getAuthor());
@@ -281,7 +301,7 @@ public class XxlJobServiceImpl implements XxlJobService {
 		exists_jobInfo.setTriggerNextTime(nextTriggerTime);
 
 		exists_jobInfo.setUpdateTime(new Date());
-        xxlJobInfoDao.update(exists_jobInfo);
+        xxlJobInfoDao.updateById(exists_jobInfo);
 
 
 		return ReturnT.SUCCESS;
@@ -294,8 +314,8 @@ public class XxlJobServiceImpl implements XxlJobService {
 			return ReturnT.SUCCESS;
 		}
 
-		xxlJobInfoDao.delete(id);
-		xxlJobLogDao.delete(id);
+		xxlJobInfoDao.deleteById(id);
+		xxlJobLogDao.deleteByJobId(id);
 		xxlJobLogGlueDao.deleteByJobId(id);
 		return ReturnT.SUCCESS;
 	}
@@ -328,7 +348,7 @@ public class XxlJobServiceImpl implements XxlJobService {
 		xxlJobInfo.setTriggerNextTime(nextTriggerTime);
 
 		xxlJobInfo.setUpdateTime(new Date());
-		xxlJobInfoDao.update(xxlJobInfo);
+		xxlJobInfoDao.updateById(xxlJobInfo);
 		return ReturnT.SUCCESS;
 	}
 
@@ -341,7 +361,7 @@ public class XxlJobServiceImpl implements XxlJobService {
 		xxlJobInfo.setTriggerNextTime(0);
 
 		xxlJobInfo.setUpdateTime(new Date());
-		xxlJobInfoDao.update(xxlJobInfo);
+		xxlJobInfoDao.updateById(xxlJobInfo);
 		return ReturnT.SUCCESS;
 	}
 
@@ -431,4 +451,17 @@ public class XxlJobServiceImpl implements XxlJobService {
 		return new ReturnT<Map<String, Object>>(result);
 	}
 
+	private void initTenantId(XxlJobInfo jobInfo){
+		Long tenantId = LoginInformationUtil.getTenantId();
+		if (StringUtils.hasText(jobInfo.getExecutorParam())){
+			String executorParam = jobInfo.getExecutorParam();
+			String[] split = executorParam.split(",");
+			boolean contains = Arrays.asList(split).contains(tenantId.toString());
+			if (!contains){
+				jobInfo.setExecutorParam(tenantId.toString() + "," + executorParam);
+			}
+		}else{
+			jobInfo.setExecutorParam(tenantId.toString());
+		}
+	}
 }

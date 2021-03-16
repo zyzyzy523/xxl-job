@@ -1,25 +1,26 @@
 package com.xxl.job.admin.core.model;
 
+
+
+import com.baomidou.mybatisplus.annotation.KeySequence;
+import com.baomidou.mybatisplus.annotation.TableName;
+
 import java.util.Date;
 
 /**
  * Created by xuxueli on 16/9/30.
  */
-public class XxlJobRegistry {
+@TableName("xxl_job_registry")
+@KeySequence("xxl_job_registry_s")
+public class XxlJobRegistry extends XxlBase{
 
-    private int id;
+
     private String registryGroup;
     private String registryKey;
     private String registryValue;
     private Date updateTime;
 
-    public int getId() {
-        return id;
-    }
 
-    public void setId(int id) {
-        this.id = id;
-    }
 
     public String getRegistryGroup() {
         return registryGroup;

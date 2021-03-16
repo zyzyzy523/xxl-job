@@ -1,6 +1,9 @@
 package com.xxl.job.admin.core.thread;
 
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.xxl.job.admin.core.conf.XxlJobAdminConfig;
+import com.xxl.job.admin.core.model.XxlJobLog;
 import com.xxl.job.admin.core.model.XxlJobLogReport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -83,7 +86,7 @@ public class JobLogReportHelper {
                             // do refresh
                             int ret = XxlJobAdminConfig.getAdminConfig().getXxlJobLogReportDao().update(xxlJobLogReport);
                             if (ret < 1) {
-                                XxlJobAdminConfig.getAdminConfig().getXxlJobLogReportDao().save(xxlJobLogReport);
+                                XxlJobAdminConfig.getAdminConfig().getXxlJobLogReportDao().insert(xxlJobLogReport);
                             }
                         }
 
@@ -107,14 +110,9 @@ public class JobLogReportHelper {
                         Date clearBeforeTime = expiredDay.getTime();
 
                         // clean expired log
-                        List<Long> logIds = null;
-                        do {
-                            logIds = XxlJobAdminConfig.getAdminConfig().getXxlJobLogDao().findClearLogIds(0, 0, clearBeforeTime, 0, 1000);
-                            if (logIds!=null && logIds.size()>0) {
-                                XxlJobAdminConfig.getAdminConfig().getXxlJobLogDao().clearLog(logIds);
-                            }
-                        } while (logIds!=null && logIds.size()>0);
-
+                        LambdaUpdateWrapper<XxlJobLog> wrapper = Wrappers.lambdaUpdate();
+                        wrapper.le(XxlJobLog::getTriggerTime, clearBeforeTime);
+                        XxlJobAdminConfig.getAdminConfig().getXxlJobLogDao().delete(wrapper);
                         // update clean time
                         lastCleanLogTime = System.currentTimeMillis();
                     }

@@ -1,6 +1,5 @@
 package com.xxl.job.admin.controller;
 
-import com.xxl.job.admin.controller.annotation.PermissionLimit;
 import com.xxl.job.admin.core.conf.XxlJobAdminConfig;
 import com.xxl.job.core.biz.AdminBiz;
 import com.xxl.job.core.biz.model.HandleCallbackParam;
@@ -22,7 +21,6 @@ import java.util.List;
  * Created by xuxueli on 17/5/10.
  */
 @Controller
-@RequestMapping("/api")
 public class JobApiController {
 
     @Resource
@@ -37,7 +35,6 @@ public class JobApiController {
      */
     @RequestMapping("/{uri}")
     @ResponseBody
-    @PermissionLimit(limit=false)
     public ReturnT<String> api(HttpServletRequest request, @PathVariable("uri") String uri, @RequestBody(required = false) String data) {
 
         // valid

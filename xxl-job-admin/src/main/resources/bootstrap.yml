@@ -1,0 +1,18 @@
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: ALWAYS
+spring:
+  application:
+    name: job
+  liquibase:
+    change-log: classpath:db/master.xml
+apollo:
+  bootstrap:
+    enabled: true
+app:
+  id: job

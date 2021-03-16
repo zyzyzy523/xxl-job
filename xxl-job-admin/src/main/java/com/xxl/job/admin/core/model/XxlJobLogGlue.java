@@ -1,14 +1,19 @@
 package com.xxl.job.admin.core.model;
 
+
+import com.baomidou.mybatisplus.annotation.KeySequence;
+import com.baomidou.mybatisplus.annotation.TableName;
+
 import java.util.Date;
 
 /**
  * xxl-job log for glue, used to track job code process
  * @author xuxueli 2016-5-19 17:57:46
  */
-public class XxlJobLogGlue {
-	
-	private int id;
+@TableName("xxl_job_logglue")
+@KeySequence("xxl_job_logglue_s")
+public class XxlJobLogGlue extends XxlBase{
+
 	private int jobId;				// 任务主键ID
 	private String glueType;		// GLUE类型	#com.xxl.job.core.glue.GlueTypeEnum
 	private String glueSource;
@@ -16,13 +21,6 @@ public class XxlJobLogGlue {
 	private Date addTime;
 	private Date updateTime;
 
-	public int getId() {
-		return id;
-	}
-
-	public void setId(int id) {
-		this.id = id;
-	}
 
 	public int getJobId() {
 		return jobId;

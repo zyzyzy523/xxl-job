@@ -1,10 +1,13 @@
 package com.xxl.job.admin.core.model;
 
+import com.baomidou.mybatisplus.annotation.KeySequence;
+import com.baomidou.mybatisplus.annotation.TableName;
+
 import java.util.Date;
 
-public class XxlJobLogReport {
-
-    private int id;
+@TableName("xxl_job_log_report")
+@KeySequence("xxl_job_log_report_s")
+public class XxlJobLogReport extends XxlBase{
 
     private Date triggerDay;
 
@@ -12,13 +15,6 @@ public class XxlJobLogReport {
     private int sucCount;
     private int failCount;
 
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
 
     public Date getTriggerDay() {
         return triggerDay;

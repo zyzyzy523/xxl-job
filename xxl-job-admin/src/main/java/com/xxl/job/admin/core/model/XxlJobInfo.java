@@ -1,5 +1,9 @@
 package com.xxl.job.admin.core.model;
 
+import com.baomidou.mybatisplus.annotation.KeySequence;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableName;
+
 import java.util.Date;
 
 /**
@@ -7,9 +11,10 @@ import java.util.Date;
  *
  * @author xuxueli  2016-1-12 18:25:49
  */
-public class XxlJobInfo {
-	
-	private int id;				// 主键ID
+@TableName("xxl_job_info")
+@KeySequence("xxl_job_info_s")
+public class XxlJobInfo extends XxlBase{
+
 	
 	private int jobGroup;		// 执行器主键ID
 	private String jobDesc;
@@ -35,21 +40,26 @@ public class XxlJobInfo {
 	private String glueSource;		// GLUE源代码
 	private String glueRemark;		// GLUE备注
 	private Date glueUpdatetime;	// GLUE更新时间
-
+	@TableField("child_jobid")
 	private String childJobId;		// 子任务ID，多个逗号分隔
 
 	private int triggerStatus;		// 调度状态：0-停止，1-运行
 	private long triggerLastTime;	// 上次调度时间
 	private long triggerNextTime;	// 下次调度时间
 
+	/**
+	 * 租户Id
+	 */
+	private Long tenantId;
 
-	public int getId() {
-		return id;
+	public Long getTenantId() {
+		return tenantId;
 	}
 
-	public void setId(int id) {
-		this.id = id;
+	public void setTenantId(Long tenantId) {
+		this.tenantId = tenantId;
 	}
+
 
 	public int getJobGroup() {
 		return jobGroup;

@@ -1,6 +1,10 @@
 package com.xxl.job.admin.controller;
 
+
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.xxl.job.admin.core.conf.XxlJobAdminConfig;
 import com.xxl.job.admin.core.model.XxlJobGroup;
+import com.xxl.job.admin.core.model.XxlJobInfo;
 import com.xxl.job.admin.core.model.XxlJobRegistry;
 import com.xxl.job.admin.core.util.I18nUtil;
 import com.xxl.job.admin.dao.XxlJobGroupDao;
@@ -8,22 +12,28 @@ import com.xxl.job.admin.dao.XxlJobInfoDao;
 import com.xxl.job.admin.dao.XxlJobRegistryDao;
 import com.xxl.job.core.biz.model.ReturnT;
 import com.xxl.job.core.enums.RegistryConfig;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.RequestMapping;
+
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
 
 /**
  * job group controller
  * @author xuxueli 2016-10-02 20:52:56
  */
-@Controller
-@RequestMapping("/jobgroup")
+@RestController
+@RequestMapping("/api/jobgroup")
 public class JobGroupController {
 
 	@Resource
@@ -34,35 +44,19 @@ public class JobGroupController {
 	private XxlJobRegistryDao xxlJobRegistryDao;
 
 	@RequestMapping
-	public String index(Model model) {
-		return "jobgroup/jobgroup.index";
+	public ResponseEntity index() {
+		// job group (executor)
+		List<XxlJobGroup> list = xxlJobGroupDao.findAll();
+		HttpHeaders headers = new HttpHeaders();
+		headers.add("x-total-count", "" + list.size());
+		return new ResponseEntity(list,headers, HttpStatus.OK);
 	}
 
-	@RequestMapping("/pageList")
-	@ResponseBody
-	public Map<String, Object> pageList(HttpServletRequest request,
-										@RequestParam(required = false, defaultValue = "0") int start,
-										@RequestParam(required = false, defaultValue = "10") int length,
-										String appname, String title) {
-
-		// page query
-		List<XxlJobGroup> list = xxlJobGroupDao.pageList(start, length, appname, title);
-		int list_count = xxlJobGroupDao.pageListCount(start, length, appname, title);
-
-		// package result
-		Map<String, Object> maps = new HashMap<String, Object>();
-		maps.put("recordsTotal", list_count);		// 总记录数
-		maps.put("recordsFiltered", list_count);	// 过滤后的总记录数
-		maps.put("data", list);  					// 分页列表
-		return maps;
-	}
-
-	@RequestMapping("/save")
-	@ResponseBody
-	public ReturnT<String> save(XxlJobGroup xxlJobGroup){
+	@PostMapping("/save")
+	public ReturnT<String> save(@RequestBody XxlJobGroup xxlJobGroup){
 
 		// valid
-		if (xxlJobGroup.getAppname()==null || xxlJobGroup.getAppname().trim().length()==0) {
+		if (xxlJobGroup.getAppName()==null || xxlJobGroup.getAppName().trim().length()==0) {
 			return new ReturnT<String>(500, (I18nUtil.getString("system_please_input")+"AppName") );
 		}
 		if (xxlJobGroup.getAppname().length()<4 || xxlJobGroup.getAppname().length()>64) {
@@ -92,17 +86,14 @@ public class JobGroupController {
 				}
 			}
 		}
-
-		// process
-		xxlJobGroup.setUpdateTime(new Date());
-
-		int ret = xxlJobGroupDao.save(xxlJobGroup);
+        // process
+        xxlJobGroup.setUpdateTime(new Date());
+		int ret = xxlJobGroupDao.insert(xxlJobGroup);
 		return (ret>0)?ReturnT.SUCCESS:ReturnT.FAIL;
 	}
 
-	@RequestMapping("/update")
-	@ResponseBody
-	public ReturnT<String> update(XxlJobGroup xxlJobGroup){
+	@PostMapping("/update")
+	public ReturnT<String> update(@RequestBody XxlJobGroup xxlJobGroup){
 		// valid
 		if (xxlJobGroup.getAppname()==null || xxlJobGroup.getAppname().trim().length()==0) {
 			return new ReturnT<String>(500, (I18nUtil.getString("system_please_input")+"AppName") );
@@ -141,14 +132,19 @@ public class JobGroupController {
 
 		// process
 		xxlJobGroup.setUpdateTime(new Date());
-
-		int ret = xxlJobGroupDao.update(xxlJobGroup);
+		int ret = xxlJobGroupDao.updateById(xxlJobGroup);
 		return (ret>0)?ReturnT.SUCCESS:ReturnT.FAIL;
 	}
 
-	private List<String> findRegistryByAppName(String appnameParam){
+	private List<String> findRegistryByAppName(String appNameParam){
 		HashMap<String, List<String>> appAddressMap = new HashMap<String, List<String>>();
-		List<XxlJobRegistry> list = xxlJobRegistryDao.findAll(RegistryConfig.DEAD_TIMEOUT, new Date());
+		Date date  = new Date();
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTime(date);
+		calendar.add(Calendar.SECOND,RegistryConfig.DEAD_TIMEOUT * -1);
+		date = calendar.getTime();
+		List<XxlJobRegistry> list = XxlJobAdminConfig.getAdminConfig().getXxlJobRegistryDao().selectList(new QueryWrapper<XxlJobRegistry>().gt("update_time",date));
+		//List<XxlJobRegistry> list = XxlJobAdminConfig.getAdminConfig().getXxlJobRegistryDao().findAll(RegistryConfig.DEAD_TIMEOUT, dbType);
 		if (list != null) {
 			for (XxlJobRegistry item: list) {
 				if (RegistryConfig.RegistType.EXECUTOR.name().equals(item.getRegistryGroup())) {
@@ -168,12 +164,11 @@ public class JobGroupController {
 		return appAddressMap.get(appnameParam);
 	}
 
-	@RequestMapping("/remove")
-	@ResponseBody
-	public ReturnT<String> remove(int id){
+	@RequestMapping("/remove/{id}")
+	public ReturnT<String> remove(@PathVariable int id){
 
 		// valid
-		int count = xxlJobInfoDao.pageListCount(0, 10, id, -1,  null, null, null);
+		int count = xxlJobInfoDao.selectCount(new QueryWrapper<XxlJobInfo>().eq("job_group", id));
 		if (count > 0) {
 			return new ReturnT<String>(500, I18nUtil.getString("jobgroup_del_limit_0") );
 		}
@@ -183,13 +178,13 @@ public class JobGroupController {
 			return new ReturnT<String>(500, I18nUtil.getString("jobgroup_del_limit_1") );
 		}
 
-		int ret = xxlJobGroupDao.remove(id);
+		int ret = xxlJobGroupDao.deleteById(id);
 		return (ret>0)?ReturnT.SUCCESS:ReturnT.FAIL;
 	}
 
 	@RequestMapping("/loadById")
 	@ResponseBody
-	public ReturnT<XxlJobGroup> loadById(int id){
+	public ReturnT<XxlJobGroup> loadById(@RequestParam int id){
 		XxlJobGroup jobGroup = xxlJobGroupDao.load(id);
 		return jobGroup!=null?new ReturnT<XxlJobGroup>(jobGroup):new ReturnT<XxlJobGroup>(ReturnT.FAIL_CODE, null);
 	}
