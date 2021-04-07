@@ -153,4 +153,27 @@
     <changeSet id="20191211002" author="admin" dbms="oracle">
         <createSequence sequenceName="xxl_job_log_report_s" />
     </changeSet>
+
+    <changeSet id="job_202103161723001" author="bin.xie">
+        <addColumn tableName="xxl_job_info">
+            <column name="schedule_type" type="varchar(50)" remarks="调度类型"/>
+            <column name="misfire_strategy" type="varchar(50)" remarks="调度过期策略"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="job_202103161723002" author="bin.xie">
+        <renameColumn tableName="xxl_job_info" oldColumnName="job_cron" newColumnName="schedule_conf" columnDataType="varchar(128)" remarks="调度配置，值含义取决于调度类型"/>
+    </changeSet>
+
+    <changeSet id="job_202103161723003" author="bin.xie">
+        <addColumn tableName="xxl_job_group">
+            <column name="update_time" type="datetime" />
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="job_202103161723004" author="bin.xie">
+        <dropColumn tableName="xxl_job_group">
+            <column name="ordering" type="int"/>
+        </dropColumn>
+    </changeSet>
 </databaseChangeLog>

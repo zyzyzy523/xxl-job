@@ -1,5 +1,6 @@
 package com.xxl.job.admin.core.thread;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.xxl.job.admin.core.conf.XxlJobAdminConfig;
 import com.xxl.job.admin.core.model.XxlJobGroup;
 import com.xxl.job.admin.core.model.XxlJobRegistry;
@@ -63,14 +64,22 @@ public class JobRegistryHelper {
 						if (groupList!=null && !groupList.isEmpty()) {
 
 							// remove dead address (admin/executor)
-							List<Integer> ids = XxlJobAdminConfig.getAdminConfig().getXxlJobRegistryDao().findDead(RegistryConfig.DEAD_TIMEOUT, new Date());
-							if (ids!=null && ids.size()>0) {
-								XxlJobAdminConfig.getAdminConfig().getXxlJobRegistryDao().removeDead(ids);
-							}
+							Date date  = new Date();
+							Calendar calendar = Calendar.getInstance();
+							calendar.setTime(date);
+							calendar.add(Calendar.SECOND,RegistryConfig.DEAD_TIMEOUT * -1);
+							date = calendar.getTime();
+
+							XxlJobAdminConfig.getAdminConfig().getXxlJobRegistryDao()
+									.delete(new QueryWrapper<XxlJobRegistry>().lt("update_time", date));
+							/*if (ids!=null && ids.size()>0) {
+								XxlJobAdminConfig.getAdminConfig().getXxlJobRegistryDao().deleteBatchIds(ids);
+							}*/
 
 							// fresh online address (admin/executor)
 							HashMap<String, List<String>> appAddressMap = new HashMap<String, List<String>>();
-							List<XxlJobRegistry> list = XxlJobAdminConfig.getAdminConfig().getXxlJobRegistryDao().findAll(RegistryConfig.DEAD_TIMEOUT, new Date());
+							List<XxlJobRegistry> list = XxlJobAdminConfig.getAdminConfig().getXxlJobRegistryDao()
+									.selectList(new QueryWrapper<XxlJobRegistry>().gt("update_time", date));
 							if (list != null) {
 								for (XxlJobRegistry item: list) {
 									if (RegistryConfig.RegistType.EXECUTOR.name().equals(item.getRegistryGroup())) {
@@ -90,7 +99,7 @@ public class JobRegistryHelper {
 
 							// fresh group address
 							for (XxlJobGroup group: groupList) {
-								List<String> registryList = appAddressMap.get(group.getAppname());
+								List<String> registryList = appAddressMap.get(group.getAppName());
 								String addressListStr = null;
 								if (registryList!=null && !registryList.isEmpty()) {
 									Collections.sort(registryList);

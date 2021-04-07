@@ -75,40 +75,15 @@ public class JobInfoController {
 		// 执行器列表
 		List<XxlJobGroup> jobGroupList_all = xxlJobGroupDao.findAll();
 
-		// filter group
-		List<XxlJobGroup> jobGroupList = filterJobGroupByRole(request, jobGroupList_all);
-		if (jobGroupList==null || jobGroupList.size()==0) {
-			throw new XxlJobException(I18nUtil.getString("jobgroup_empty"));
-		}
 
-		model.addAttribute("JobGroupList", jobGroupList);
+
+		model.addAttribute("JobGroupList", jobGroupList_all);
 		model.addAttribute("jobGroup", jobGroup);
 
 		return "jobinfo/jobinfo.index";
 	}
 
-	public static List<XxlJobGroup> filterJobGroupByRole(HttpServletRequest request, List<XxlJobGroup> jobGroupList_all){
-		List<XxlJobGroup> jobGroupList = new ArrayList<>();
-		/*if (jobGroupList_all!=null && jobGroupList_all.size()>0) {
-			XxlJobUser loginUser = (XxlJobUser) request.getAttribute(LoginService.LOGIN_IDENTITY_KEY);
-			if (loginUser.getRole() == 1) {
-				jobGroupList = jobGroupList_all;
-			} else {
-				List<String> groupIdStrs = new ArrayList<>();
-				if (loginUser.getPermission()!=null && loginUser.getPermission().trim().length()>0) {
-					groupIdStrs = Arrays.asList(loginUser.getPermission().trim().split(","));
-				}
-				for (XxlJobGroup groupItem:jobGroupList_all) {
-					if (groupIdStrs.contains(String.valueOf(groupItem.getId()))) {
-						jobGroupList.add(groupItem);
-					}
-				}
-			}
-		}*/
-		return jobGroupList;
-	}
 
-	
 	@GetMapping("/pageList")
 	public ResponseEntity pageList(
 			@RequestParam(required = false, defaultValue = "0") int page,

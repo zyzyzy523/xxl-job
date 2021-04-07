@@ -17,7 +17,6 @@ public interface XxlJobRegistryDao extends BaseMapper<XxlJobRegistry> {
 
 
 
-
     public int registryUpdate(@Param("registryGroup") String registryGroup,
                               @Param("registryKey") String registryKey,
                               @Param("registryValue") String registryValue,

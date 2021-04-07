@@ -1,17 +1,20 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
+
+	<artifactId>job</artifactId>
+	<version>2.6.0.RELEASE</version>
+	<packaging>jar</packaging>
 	<parent>
 		<groupId>com.hand.hcf.cloud</groupId>
 		<artifactId>hcf-cloud-parent</artifactId>
-		<version>2.5.0-SNAPSHOT</version>
+		<version>2.6.2.RELEASE</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<artifactId>job-admin</artifactId>
-	<packaging>jar</packaging>
-	<version>2.3.0-SNAPSHOT</version>
-
-
+	<properties>
+		<liquibase.version>4.2.0.RC4</liquibase.version>
+		<jasypt.spring.version>3.0.3</jasypt.spring.version>
+	</properties>
 	<dependencies>
 
 		<!-- starter-test：junit + spring-test + mockito -->
@@ -36,6 +39,7 @@
 		<dependency>
 			<groupId>org.liquibase</groupId>
 			<artifactId>liquibase-core</artifactId>
+			<version>${liquibase.version}</version>
 		</dependency>
 
 		<!-- starter-actuator -->
@@ -48,12 +52,12 @@
 		<dependency>
 			<groupId>com.baomidou</groupId>
 			<artifactId>mybatis-plus-boot-starter</artifactId>
-			<version>3.2.0</version>
+			<version>3.4.2</version>
 		</dependency>
 		<dependency>
 			<groupId>org.mybatis.spring.boot</groupId>
 			<artifactId>mybatis-spring-boot-starter</artifactId>
-			<version>2.1.0</version>
+			<version>2.1.4</version>
 		</dependency>
 		<!-- jdbc -->
 		<dependency>
@@ -70,9 +74,9 @@
 
 		<!-- xxl-job-core -->
 		<dependency>
-			<groupId>com.xuxueli</groupId>
-			<artifactId>xxl-job-core</artifactId>
-			<version>2.3.0</version>
+			<groupId>com.hand.hcf</groupId>
+			<artifactId>job-core</artifactId>
+			<version>2.3.0-SNAPSHOT</version>
 		</dependency>
 
 		<dependency>
@@ -91,25 +95,9 @@
 			<artifactId>spring-boot-starter-undertow</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>com.ctrip.framework.apollo</groupId>
-			<artifactId>apollo-client</artifactId>
-			<version>${apollo.version}</version>
-			<exclusions>
-				<exclusion>
-					<groupId>com.google.guava</groupId>
-					<artifactId>guava</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-		<dependency>
 			<groupId>com.github.ulisesbocchio</groupId>
 			<artifactId>jasypt-spring-boot-starter</artifactId>
-			<version>2.1.1</version>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.cloud</groupId>
-			<artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
-			<optional>true</optional>
+			<version>${jasypt.spring.version}</version>
 		</dependency>
 	</dependencies>
 
@@ -121,6 +109,13 @@
 				<configuration>
 					<classifier>exec</classifier>
 				</configuration>
+				<executions>
+					<execution>
+						<goals>
+							<goal>build-info</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 			<!-- docker -->
 			<plugin>
@@ -140,6 +135,7 @@
 					</to>
 					<allowInsecureRegistries>true</allowInsecureRegistries>
 					<container>
+						<mainClass>com.xxl.job.admin.XxlJobAdminApplication</mainClass>
 						<jvmFlags>
 							<jvmFlag>-Djava.security.edg=file:/dev/./urandom</jvmFlag>
 						</jvmFlags>
@@ -162,4 +158,10 @@
 			</snapshots>
 		</repository>
 	</repositories>
+	<pluginRepositories>
+		<pluginRepository>
+			<id>spring-milestones</id>
+			<url>http://repo.spring.io/milestone</url>
+		</pluginRepository>
+	</pluginRepositories>
 </project>
